@@ -59,8 +59,4 @@ def create_app() -> FastAPI:
 
         return Response(status_code=status.HTTP_301_MOVED_PERMANENTLY, headers={"Location": real_link})
 
-    @app.get("/fail/fail")
-    async def fail():
-        raise ValueError("This will be logged nicely!")
-
     return app
