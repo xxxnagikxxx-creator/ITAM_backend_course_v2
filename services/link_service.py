@@ -1,4 +1,4 @@
-from ITAM_Python_backend_course.utils.utils_random import random_alfanum
+from utils.utils_random import random_alfanum
 
 
 class LinkService:

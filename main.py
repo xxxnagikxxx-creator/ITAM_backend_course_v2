@@ -1,5 +1,5 @@
 import uvicorn
-from ITAM_Python_backend_course.presentations.fastapi_app import create_app
+from presentations.fastapi_app import create_app
 
 
 def main() -> None:
