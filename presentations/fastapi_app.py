@@ -1,7 +1,6 @@
 from collections.abc import Callable
 from typing import Awaitable
-from fastapi import FastAPI, HTTPException, Response, status
-from httpx import Request
+from fastapi import FastAPI, HTTPException, Response, status, Request
 from pydantic import BaseModel
 from services.link_service import LinkService
 from utils.utils_check import link_check
@@ -9,7 +8,7 @@ from utils.utils_correction import link_correction
 from fastapi.responses import JSONResponse
 from loguru import logger
 import time
-#серега пират
+
 
 def create_app() -> FastAPI:
     app = FastAPI()
@@ -17,6 +16,8 @@ def create_app() -> FastAPI:
 
     class PutLink(BaseModel):
         link: str
+
+
 
     def _service_link_to_real(short_link: str) -> str:
         return f"http://127.0.0.1:8000/{short_link}"
@@ -40,22 +41,44 @@ def create_app() -> FastAPI:
 
 
     @app.post("/link")
-    def create_link(put_link_request: PutLink) -> PutLink:
+    async def create_link(put_link_request: PutLink) -> PutLink:
         if not link_check(put_link_request.link):
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail='Invalid link')
 
         put_link_request.link = link_correction(put_link_request.link)
 
-        short_link = short_link_service.create_link(put_link_request.link)
+        short_link = await short_link_service.create_link(put_link_request.link)
         return PutLink(link=_service_link_to_real(short_link))
 
     @app.get("/{link}")
-    def get_link(link: str) -> Response:
-        real_link = short_link_service.get_real_link(link)
+    async def get_link(link: str, request: Request) -> Response:
+        real_link = await short_link_service.get_real_link(link)
 
         if real_link is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link not found:(")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
+
+        user_agent = request.headers.get('user-agent', '')
+        user_ip = request.client.host if request.client else ''
+        await short_link_service.put_link_usage(short_link=link, user_ip=user_ip, user_agent=user_agent)
 
         return Response(status_code=status.HTTP_301_MOVED_PERMANENTLY, headers={"Location": real_link})
+
+
+    @app.get("/{short_link}/statistics")
+    async def get_usage_statistics(short_link: str, page: int, page_size: int) -> Response:
+
+        if short_link is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
+
+        usage_statistics = await short_link_service.get_usage_statistics(short_link, page, page_size)
+
+        if usage_statistics is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No short link statistics:(")
+
+        return usage_statistics
+
+
+
+
 
     return app
