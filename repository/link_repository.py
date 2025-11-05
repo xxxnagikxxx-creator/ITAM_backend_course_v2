@@ -38,7 +38,7 @@ class LinkRepository:
 
         return row[0]
 
-    async def get_link_usage(self, short_link_id: str, page: int, page_size: int) -> Sequence["LinkUsage"]:
+    async def get_link_usage(self, short_link_id: str, page: int, page_size: int) -> list[LinkUsage]:
         offset = max(page - 1, 0) * page_size
         stmp = select(LinkUsage).where(LinkUsage.short_link_id == short_link_id).order_by(LinkUsage.created_at.desc()).offset(offset).limit(page_size)
 

@@ -67,8 +67,6 @@ def create_app() -> FastAPI:
     @app.get("/{short_link}/statistics")
     async def get_usage_statistics(short_link: str, page: int, page_size: int) -> Response:
 
-        if short_link is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
 
         usage_statistics = await short_link_service.get_usage_statistics(short_link, page, page_size)
 
