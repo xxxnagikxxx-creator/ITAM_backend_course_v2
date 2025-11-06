@@ -21,7 +21,9 @@ def create_app() -> FastAPI:
 
     def _service_link_to_real(short_link: str, request: Request) -> str:
         hostname = request.url.hostname
-        return f"http://{hostname}:8000/{short_link}"
+        port = request.url.port or 8000
+        scheme = request.url.scheme
+        return f"{scheme}://{hostname}:{port}/{short_link}"
 
     @app.exception_handler(Exception)
     async def catch_all(request: Request, exc: Exception):
@@ -42,14 +44,14 @@ def create_app() -> FastAPI:
 
 
     @app.post("/link")
-    async def create_link(put_link_request: PutLink) -> PutLink:
+    async def create_link(put_link_request: PutLink, request: Request) -> PutLink:
         if not link_check(put_link_request.link):
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail='Invalid link')
 
         put_link_request.link = link_correction(put_link_request.link)
 
         short_link = await short_link_service.create_link(put_link_request.link)
-        return PutLink(link=_service_link_to_real(short_link))
+        return PutLink(link=_service_link_to_real(short_link, request))
 
     @app.get("/{link}")
     async def get_link(link: str, request: Request) -> Response:
@@ -62,12 +64,21 @@ def create_app() -> FastAPI:
         user_ip = request.client.host if request.client else ''
         await short_link_service.put_link_usage(short_link=link, user_ip=user_ip, user_agent=user_agent)
 
-        return Response(status_code=status.HTTP_301_MOVED_PERMANENTLY, headers={"Location": real_link})
-
+        return Response(
+            status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+            headers={
+                "Location": real_link,
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
 
     @app.get("/{short_link}/statistics")
     async def get_usage_statistics(short_link: str, page: int, page_size: int) -> Response:
 
+        if short_link is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
 
         usage_statistics = await short_link_service.get_usage_statistics(short_link, page, page_size)
 
