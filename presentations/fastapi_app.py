@@ -19,7 +19,7 @@ def create_app() -> FastAPI:
 
 
 
-    def _service_link_to_real(short_link: str) -> str:
+    def _service_link_to_real(short_link: str, request: Request) -> str:
         hostname = request.url.hostname
         return f"http://{hostname}:8000/{short_link}"
 
