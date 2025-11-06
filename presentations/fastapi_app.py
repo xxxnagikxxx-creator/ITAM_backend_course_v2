@@ -20,7 +20,7 @@ def create_app() -> FastAPI:
 
 
     def _service_link_to_real(short_link: str) -> str:
-        return f"http://127.0.0.1:8000/{short_link}"
+        return f"http://0.0.0.0:8000/{short_link}"
 
     @app.exception_handler(Exception)
     async def catch_all(request: Request, exc: Exception):
