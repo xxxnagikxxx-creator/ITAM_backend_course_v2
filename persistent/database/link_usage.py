@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy.sql import func
-from sqlalchemy import Column, TEXT, DATETIME
+from sqlalchemy import Column, TEXT, DateTime
 from persistent.database.base import Base
 
 def _uuid4_as_str() -> str:
@@ -17,4 +17,4 @@ class LinkUsage(Base):
     user_ip = Column(TEXT, nullable= False)
     user_agent = Column(TEXT, nullable= False)
 
-    created_at = Column(DATETIME(timezone= True), default= func.now(), nullable= False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)

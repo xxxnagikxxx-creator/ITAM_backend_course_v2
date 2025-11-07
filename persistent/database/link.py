@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy.sql import func
-from sqlalchemy import Column, TEXT, DATETIME
+from sqlalchemy import Column, TEXT, DateTime
 from persistent.database.base import Base
 
 def _uuid4_as_str() -> str:
@@ -15,4 +15,4 @@ class Link(Base):
     short_link = Column(TEXT, nullable= False, unique= True)
     real_link = Column(TEXT, nullable= False)
 
-    created_at = Column(DATETIME(timezone= True), default= func.now(), nullable= False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
