@@ -1,4 +1,4 @@
-from infrastructure.database.connection import create_all_tables, sqlite_connection
+from infrastructure.database.connection import create_all_tables, pg_connection
 from persistent.database.link import Link
 from persistent.database.link_usage import LinkUsage
 from sqlalchemy import insert, select
@@ -9,7 +9,7 @@ from persistent.database.link_usage import LinkUsage
 
 class LinkRepository:
     def __init__(self) -> None:
-        self._sessionmaker = sqlite_connection()
+        self._sessionmaker = pg_connection()
         create_all_tables()
 
     async def put_link(self, short_link: str, real_link: str) -> None:

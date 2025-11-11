@@ -7,6 +7,7 @@ from utils.utils_check import link_check
 from utils.utils_correction import link_correction
 from fastapi.responses import JSONResponse
 from loguru import logger
+from settings.settings import settings
 import time
 
 
@@ -20,8 +21,8 @@ def create_app() -> FastAPI:
 
 
     def _service_link_to_real(short_link: str, request: Request) -> str:
-        hostname = request.url.hostname
-        port = request.url.port or 8000
+        hostname = request.url.hostname or "localhost"
+        port = request.url.port or settings.uvicorn.port
         scheme = request.url.scheme
         return f"{scheme}://{hostname}:{port}/{short_link}"
 
@@ -53,6 +54,19 @@ def create_app() -> FastAPI:
         short_link = await short_link_service.create_link(put_link_request.link)
         return PutLink(link=_service_link_to_real(short_link, request))
 
+    @app.get("/{short_link}/statistics")
+    async def get_usage_statistics(short_link: str, page: int, page_size: int) -> Response:
+
+        if short_link is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
+
+        usage_statistics = await short_link_service.get_usage_statistics(short_link, page, page_size)
+
+        if usage_statistics is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No short link statistics:(")
+
+        return usage_statistics
+
     @app.get("/{link}")
     async def get_link(link: str, request: Request) -> Response:
         real_link = await short_link_service.get_real_link(link)
@@ -73,21 +87,6 @@ def create_app() -> FastAPI:
                 "Expires": "0",
             },
         )
-
-    @app.get("/{short_link}/statistics")
-    async def get_usage_statistics(short_link: str, page: int, page_size: int) -> Response:
-
-        if short_link is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short link is not found:(")
-
-        usage_statistics = await short_link_service.get_usage_statistics(short_link, page, page_size)
-
-        if usage_statistics is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No short link statistics:(")
-
-        return usage_statistics
-
-
 
 
 

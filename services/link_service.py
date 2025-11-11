@@ -8,9 +8,7 @@ class LinkService:
 
     async def create_link(self, real_link: str) -> str:
         short_link = random_alfanum(5)
-
         await self._link_repository.put_link(short_link, real_link)
-
         return short_link
 
     async def get_real_link(self, short_link: str) -> str | None:

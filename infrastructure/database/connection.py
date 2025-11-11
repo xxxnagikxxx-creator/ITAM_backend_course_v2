@@ -1,21 +1,21 @@
 from persistent.database.base import Base
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from settings.settings import settings
 
-_url = "sql_app_v2.db"
-
-def sqlite_connection() -> async_sessionmaker[AsyncSession]:
+def pg_connection() -> async_sessionmaker[AsyncSession]:
     engine = create_async_engine(
-        f"sqlite+aiosqlite:///{_url}",
-        connect_args={"check_same_thread": False},
+        f"postgresql+asyncpg://{settings.pg.username}:{settings.pg.password}@"
+        f"{settings.pg.host}:{settings.pg.port}/{settings.pg.database}"
     )
 
-    return async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    return async_sessionmaker(autocommit= False, autoflush=False, bind=engine)
+
 
 def create_all_tables() -> None:
     engine = create_engine(
-        f"sqlite:///{_url}",
-        connect_args={"check_same_thread": False},
+        f"postgresql://{settings.pg.username}:{settings.pg.password}@"
+        f"{settings.pg.host}:{settings.pg.port}/{settings.pg.database}"
     )
 
     Base.metadata.create_all(engine)
